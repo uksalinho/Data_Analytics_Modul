@@ -454,6 +454,47 @@ AND		EXISTS (
 
 
 
+
+---2019' dan sonra sipariþi olup öncesinde sipariþi olmayan müþterileri getiriniz.
+
+SELECT	DISTINCT customer_id
+FROM	sale.orders
+WHERE	YEAR(order_date) = 2019
+EXCEPT
+SELECT	customer_id
+FROM	sale.orders
+WHERE	YEAR(order_date) < 2019
+
+
+
+SELECT	DISTINCT customer_id
+FROM	sale.orders X
+WHERE	YEAR(order_date) = 2019
+AND		NOT EXISTS	(
+						SELECT	customer_id
+						FROM	sale.orders Y
+						WHERE	YEAR(order_date) < 2019
+						AND		X.customer_id = Y.customer_id
+					)
+
+
+---2019' dan sonra sipariþ vermemiþ müþteriler
+
+
+
+SELECT	DISTINCT customer_id
+FROM	sale.customer X
+WHERE	NOT EXISTS (
+						SELECT	customer_id
+						FROM	sale.orders Y
+						WHERE	YEAR(order_date) > 2019
+						AND		X.customer_id = Y.customer_id
+					)
+
+
+
+
+
 ----------////////////////////------------
 
 ------ CTE's ------
@@ -504,6 +545,60 @@ AND		D.city ='Austin'
 )
 SELECT * 
 FROM T2
+
+
+
+-----Recursive CTE's
+
+
+1
+2
+3
+4
+5
+6
+
+
+WITH T1 AS
+(
+SELECT 1 AS start_ --temel sorgu
+UNION ALL
+SELECT start_+ 1 as New_number
+FROM	T1
+WHERE	start_ < 9
+)
+SELECT start_
+FROM T1
+
+---------------------------
+
+--List the stores whose turnovers are under the average store turnovers in 2018.
+
+--2018 Yýlýnýn ortalama maðaza cirosundan daha düþük ciroya sahip maðazalarý getirin.
+
+--önce maðazalarýn 2018 yýlýna ait cirolarýný bulunuz ciro = turnover = (quantity*list_price* (1-discount))
+
+
+
+WITH T1 AS
+(
+SELECT	a.store_id, a.store_name, SUM(quantity*list_price* (1-discount)) total_turnover_by_stores
+FROM	sale.store A, sale.orders B, sale.order_item C
+WHERE	A.store_id = B.store_id 
+AND		B.order_id = C.order_id
+AND		YEAR(order_date) = 2018
+GROUP BY	A.store_id, A.store_name
+), T2 AS
+(
+SELECT	AVG(total_turnover_by_stores) avg_turnover
+FROM	T1
+)
+SELECT	A.store_id, a.store_name, a.total_turnover_by_stores, b.avg_turnover
+FROM	T1 A, T2 B
+WHERE	A.total_turnover_by_stores < B.avg_turnover
+
+
+
 
 
 
