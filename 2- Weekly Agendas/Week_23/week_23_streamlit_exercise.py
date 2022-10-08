@@ -147,22 +147,3 @@ st.sidebar.line_chart(df['Age'][:50])
 
 x = st.slider('x')
 st.line_chart(df['Age'].sample(x))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
